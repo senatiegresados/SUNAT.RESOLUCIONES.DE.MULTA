@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUNAT - Consulta de Actas Probatorias y Resoluciones de Multa</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #eef1f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  .header {
+    width: 100%;
+    background: white;
+    border-bottom: 4px solid #c0392b;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+    margin-bottom: 0;
+  }
+  .sunat-logo-svg { width: 140px; height: 56px; }
+  .header-right { font-size: 11.5px; color: #666; text-align: right; line-height: 1.7; }
+  .header-right strong { color: #1a5276; }
+
+  .nav-bar {
+    width: 100%;
+    background: #1a5276;
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    margin-bottom: 22px;
+  }
+  .nav-item {
+    color: #a8c8e0; font-size: 12.5px; font-weight: 600;
+    padding: 10px 18px; cursor: pointer;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+  }
+  .nav-item:hover { color: white; border-bottom-color: #c0392b; }
+  .nav-item.active { color: white; border-bottom-color: #c0392b; background: rgba(255,255,255,0.07); }
+
+  .breadcrumb {
+    width: 100%; max-width: 880px;
+    font-size: 12px; color: #888;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .breadcrumb a { color: #1a5276; text-decoration: none; }
+  .breadcrumb span { color: #c0392b; font-weight: 700; }
+
+  .titulo-panel {
+    background: #1a5276; color: white;
+    font-size: 14.5px; font-weight: 700;
+    text-align: left; padding: 12px 22px;
+    border-radius: 6px 6px 0 0;
+    width: 100%; max-width: 880px;
+    border-left: 5px solid #c0392b;
+    display: flex; align-items: center; gap: 9px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 0 0 8px 8px;
+    width: 100%; max-width: 880px;
+    padding: 28px 38px 32px;
+    box-shadow: 0 3px 18px rgba(0,0,0,0.09);
+    border: 1px solid #d5dde5; border-top: none;
+    margin-bottom: 20px;
+  }
+
+  .instruccion {
+    background: #f4f8fb;
+    border: 1px solid #c8daea;
+    border-left: 4px solid #1a5276;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 13px; color: #2c3e50;
+    margin-bottom: 22px; line-height: 1.6;
+  }
+
+  .seccion-lbl {
+    font-size: 12px; font-weight: 700; color: #1a5276;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 12px; padding-bottom: 6px;
+    border-bottom: 1px solid #e0eaf2;
+  }
+
+  .buscar-por { display: flex; align-items: center; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .buscar-por .lbl { font-size: 13px; font-weight: 700; color: #333; margin-right: 4px; }
+  .radio-option { display: flex; align-items: center; gap: 5px; margin-right: 14px; cursor: pointer; }
+  .radio-option input[type="radio"] { accent-color: #c0392b; width: 14px; height: 14px; cursor: pointer; }
+  .radio-option span { font-size: 13px; color: #333; }
+
+  hr.sep { border: none; border-top: 1px solid #e8eef3; margin: 6px 0 20px; }
+  hr.sep2 { border: none; border-top: 1px solid #e8eef3; margin: 22px 0 20px; }
+
+  .form-row { display: flex; align-items: center; margin-bottom: 14px; gap: 10px; }
+  .form-row label { font-size: 13px; color: #444; font-weight: 600; min-width: 200px; text-align: right; flex-shrink: 0; }
+  .form-row input[type="text"] {
+    flex: 1; border: 1px solid #b8ccd8; border-radius: 3px;
+    padding: 9px 14px; font-size: 13px; color: #222; outline: none;
+    font-family: 'Open Sans', sans-serif; transition: border-color 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+  }
+  .form-row input[type="text"]:focus { border-color: #1a5276; box-shadow: 0 0 0 3px rgba(26,82,118,0.10); }
+  .form-row input[type="text"]::placeholder { color: #b0bec5; text-transform: none; }
+
+  .tipo-group { display: flex; gap: 8px; flex: 1; }
+  .tipo-group select {
+    border: 1px solid #b8ccd8; border-radius: 3px;
+    padding: 9px 30px 9px 12px; font-size: 13px; color: #333;
+    outline: none; background: white; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    font-family: 'Open Sans', sans-serif; min-width: 80px;
+  }
+  .tipo-group input[type="text"] { flex: 1; }
+
+  .verif-group { display: flex; align-items: center; gap: 8px; }
+  .verif-group input.cod-inp { width: 130px !important; flex: none !important; text-align: center; letter-spacing: 2px; font-weight: 600; }
+
+  .info-wrap { position: relative; display: inline-flex; }
+  .info-btn { width: 19px; height: 19px; background: #1a5276; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .info-btn span { color: white; font-size: 10px; font-weight: 700; font-style: italic; }
+  .tooltip {
+    display: none; position: absolute; background: #1a3a5c; color: white;
+    font-size: 11.5px; padding: 8px 12px; border-radius: 5px; width: 220px;
+    z-index: 30; top: 26px; left: -100px; line-height: 1.5; box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  }
+  .info-wrap:hover .tooltip { display: block; }
+
+  .captcha-lbl { font-size: 13px; color: #333; margin-bottom: 10px; font-weight: 600; }
+  .captcha-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .captcha-box {
+    background: #edf2f7; border: 1px solid #b8ccd8; border-radius: 4px;
+    padding: 10px 18px; font-family: 'Courier New', monospace; font-size: 22px;
+    font-weight: 900; color: #1a5276; letter-spacing: 10px;
+    position: relative; min-width: 130px; text-align: center; user-select: none; overflow: hidden;
+  }
+  .captcha-box .noise {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(26,82,118,0.04) 2px, rgba(26,82,118,0.04) 3px);
+    pointer-events: none;
+  }
+  .captcha-box .line1 { position: absolute; top: 42%; left: 4px; right: 4px; height: 1.5px; background: rgba(192,57,43,0.2); transform: rotate(-1deg); pointer-events: none; }
+  .captcha-text { position: relative; z-index: 1; }
+
+  .captcha-inp {
+    border: 1px solid #b8ccd8; border-radius: 3px; padding: 9px 14px;
+    font-size: 14px; outline: none; width: 170px; font-family: 'Open Sans', sans-serif;
+    transition: border-color 0.2s; text-transform: uppercase; letter-spacing: 3px; text-align: center;
+  }
+  .captcha-inp:focus { border-color: #1a5276; }
+  .captcha-inp::placeholder { color: #aabbc5; text-transform: none; letter-spacing: 0; }
+
+  .btn-consultar {
+    background: #c0392b; color: white; border: none; border-radius: 3px;
+    padding: 10px 38px; font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'Open Sans', sans-serif; transition: background 0.2s, transform 0.1s;
+  }
+  .btn-consultar:hover { background: #a93226; transform: translateY(-1px); }
+
+  .gen-row { display: flex; align-items: center; gap: 7px; margin-top: 11px; cursor: pointer; width: fit-content; }
+  .gen-row span { font-size: 12.5px; color: #1a5276; font-weight: 600; }
+  .gen-ico { width: 20px; height: 20px; background: #1a5276; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .gen-row:hover .gen-ico { background: #c0392b; }
+  .gen-ico svg { width: 11px; height: 11px; }
+
+  .alert { display: none; margin-top: 14px; padding: 10px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; }
+  .alert.error { background: #fdf0ef; color: #922b21; border: 1px solid #f1948a; }
+
+  /* ── RESULTADO ── */
+  #bloque-resultado { display: none; width: 100%; max-width: 880px; }
+
+  .resultado-titulo {
+    background: #1a5276; color: white; font-size: 14px; font-weight: 700;
+    padding: 12px 22px; border-radius: 6px 6px 0 0;
+    border-left: 5px solid #c0392b;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .resultado-card {
+    background: white; border: 1px solid #c5d5de; border-top: none;
+    border-radius: 0 0 8px 8px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.09);
+  }
+
+  .banner-estado {
+    display: flex; align-items: center; gap: 20px;
+    padding: 22px 28px;
+    background: linear-gradient(135deg, #eafaf1 0%, #d5f5e3 100%);
+    border-bottom: 1px solid #a9dfbf;
+  }
+  .estado-icono {
+    width: 58px; height: 58px; border-radius: 50%; background: #27ae60;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(39,174,96,0.3);
+  }
+  .estado-icono svg { width: 32px; height: 32px; }
+  .estado-texto .titulo-estado { font-size: 17px; font-weight: 700; color: #1e8449; margin-bottom: 4px; }
+  .estado-texto .sub-estado { font-size: 12.5px; color: #239b56; line-height: 1.6; max-width: 500px; }
+  .badges-col { margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+  }
+  .badge.verde  { background: #d5f5e3; color: #1e8449; border: 1px solid #27ae60; }
+  .badge.gris   { background: #eaecee; color: #626567; border: 1px solid #aab7b8; }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .res-seccion { padding: 4px 22px; border-bottom: 1px solid #f0f4f7; }
+  .res-seccion-lbl {
+    font-size: 11px; font-weight: 700; color: #1a5276;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    padding: 12px 0 8px;
+    border-bottom: 1px solid #e8eef3;
+    margin-bottom: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .res-seccion-lbl::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 13px;
+    background: #c0392b;
+    border-radius: 2px;
+  }
+
+  .datos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .dato-item { padding: 10px 14px; border-bottom: 1px solid #f0f4f7; border-right: 1px solid #f0f4f7; }
+  .dato-item:nth-child(even) { border-right: none; }
+  .dato-item.full { grid-column: 1 / -1; border-right: none; }
+  .dato-label { font-size: 10.5px; color: #8899aa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .dato-valor { font-size: 13px; color: #1c2833; font-weight: 600; line-height: 1.4; }
+  .dato-valor.destacado { color: #1a5276; font-size: 14px; }
+  .dato-valor.rojo { color: #c0392b; }
+
+  .infraccion-box {
+    background: #fdf9f0;
+    border: 1px solid #f0d78a;
+    border-left: 4px solid #e67e22;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 8px 0 14px;
+    font-size: 12.5px; color: #5d4037; line-height: 1.65;
+  }
+  .infraccion-box strong { color: #b7770d; }
+
+  .monto-box {
+    background: #f8f9fa;
+    border-top: 1px solid #e0e7ed;
+    padding: 16px 22px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .monto-izq .monto-lbl { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 2px; }
+  .monto-izq .monto-concepto { font-size: 13px; color: #444; }
+  .monto-der .monto-val { font-size: 24px; font-weight: 700; color: #aab; text-decoration: line-through; }
+  .monto-der .monto-estado { font-size: 12px; color: #27ae60; font-weight: 700; text-align: right; margin-top: 2px; }
+
+  .nota-legal {
+    background: #eaf2f8;
+    border-top: 1px solid #aed6f1;
+    padding: 14px 22px;
+    font-size: 12.5px; color: #1f618d; line-height: 1.7;
+  }
+  .nota-legal strong { color: #1a5276; }
+
+  .btn-nueva {
+    display: inline-block; margin: 14px 22px 16px;
+    background: #6c757d; color: white; border: none; border-radius: 3px;
+    padding: 9px 26px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Open Sans', sans-serif; transition: background 0.2s;
+  }
+  .btn-nueva:hover { background: #545b62; }
+
+  .footer-top { background: #1a5276; width: 100%; padding: 8px 30px; text-align: center; font-size: 11px; color: #aac8df; margin-top: 30px; }
+  .footer-sunat {
+    width: 100%; background: #17202a;
+    padding: 18px 30px; text-align: center;
+    font-size: 11.5px; color: #7f8c8d; line-height: 1.9;
+  }
+  .footer-sunat strong { color: #aab7b8; }
+  .footer-sunat a { color: #5dade2; text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .card { padding: 18px 14px 22px; }
+    .form-row label { min-width: 110px; font-size: 12px; }
+    .datos-grid { grid-template-columns: 1fr; }
+    .dato-item { border-right: none; }
+    .banner-estado { flex-direction: column; align-items: flex-start; }
+    .badges-col { margin-left: 0; flex-direction: row; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+<img src="data:image/png;base64,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KILxcKm63WrudbIZKmqmdNK4nZLnHZV4Zdh1kybEHYvXxSMt/KxsYhfyuj5NchB+Wh67WY2vw2YnT3Bs9bd7lW07XB30chrA75EgbI/BaFpuFLSo90mdpV5cChd7fVVasZHjZTrxMoxbgPmWQY1S3uCa3UzKuISwQzyODy0jbSdD4dr0abw4Z0/m8+tssOvq6me7f/1GlWUEUcELIYWBkcbQ1jR6ADoAv7Xi7tBVqq4xjwPVvZ+jREyi/wBn59Zfjt0xXIKmx3iFsdXT65uQ7a4EbDmnpsFb34QMw54a3C6yX4mbqqLf6PQPb9x0fvK0filwjx3Pq6G41s1TQ18bBGZ6fl+NgPQOBHXXYr6fDTgtj2EX8XynuFfXVjI3RxecWtawO9ToDqVuVV2pqujVkn5/DiadJaaikrduP8njwOW8Z38DLD/WZ/0XqfuGUjIuIePySODWivi2T/K0rS4j4NZM9s0Vsvf0hrIJfOhkgk5XsfojfoQehI0QuIxLgBilgv8AS3j9kbnWS0solhjkc1rQ4em9DZH4LCgulPBRrC/OdfM9a+1zz1rZmYxp5GvIiLmjowiIgOfz/ELNm2Oy2W9Qc0bvihmZoSQSa6PYexH4EbB2Coo4jYXeMGyKS0XaPbTt1NUtaRHUR/pN/wBx2Kvdc5xDw2y5xj0lnvMJLd88E7NCSnk10ew+/uPQjoVXtV0dRu2XasXy6oSLram1rNpuj03L6KQOtT4E8J6jO68XK6ianx6nf+6Ob8Lqpw/8bD2Hu4enoOvUdXi3hsvAydgyW6UD7JE4ucaOR/nVAB+Fui0Bm/UnZI9B68wpW20NJbaCCgoKeOmpYGBkUUbdNa0egAVm53xjWbFMuVXjy+/0I1rsT1f3lSmEThz+31P6oqWmoqOGjo4I6emgjbHFFG0NaxoGg0AdAAOy+ZEXHquTsNwREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQH//2Q==" style="height:52px;width:auto;" alt="SUNAT">
+  <div class="header-right">
+    <strong>Servicios en Línea — Portal SOL</strong><br>
+    Atención: Lun–Vie 8:30 am – 5:30 pm<br>
+    Central: <strong>0-801-12-100</strong> &nbsp;|&nbsp; Lima: <strong>(01) 315-0730</strong>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <div class="nav-item">Inicio</div>
+  <div class="nav-item">Operaciones en Línea</div>
+  <div class="nav-item active">Consultas</div>
+  <div class="nav-item">Trámites</div>
+  <div class="nav-item">Declaraciones</div>
+</div>
+
+<div class="breadcrumb">
+  <a href="#">Inicio</a> › <a href="#">Consultas</a> › <span>Consulta de Actas Probatorias y Resoluciones de Multa</span>
+</div>
+
+<!-- TÍTULO -->
+<div class="titulo-panel" id="titulo-main">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  Consulta de Actas Probatorias y Resoluciones de Multa
+</div>
+
+<!-- FORMULARIO -->
+<div class="card" id="card-form">
+  <div class="instruccion">
+    Mediante este servicio podrá consultar el estado de <strong>Actas Probatorias</strong> y <strong>Resoluciones de Multa</strong> emitidas por SUNAT en intervenciones de fiscalización del transporte de bienes. Ingrese los datos del transportista o empresa intervenida.
+  </div>
+
+  <div class="seccion-lbl">Criterio de búsqueda</div>
+  <div class="buscar-por">
+    <div class="lbl">Buscar por:</div>
+    <label class="radio-option">
+      <input type="radio" name="buscar" value="acta" checked>
+      <span>N° de Acta Probatoria</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="buscar" value="placa">
+      <span>Placa del Vehículo</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="buscar" value="ruc">
+      <span>RUC de la Empresa</span>
+    </label>
+  </div>
+  <hr class="sep">
+
+  <div class="form-row" id="row-acta">
+    <label>N° Acta Probatoria:</label>
+    <input type="text" id="num-acta" placeholder="Ej: 0200700142859-04">
+  </div>
+  <div class="form-row" id="row-placa" style="display:none">
+    <label>Placa del Vehículo:</label>
+    <input type="text" id="num-placa" placeholder="Ej: F3W794">
+  </div>
+  <div class="form-row" id="row-ruc" style="display:none">
+    <label>RUC de la Empresa:</label>
+    <input type="text" id="num-ruc" placeholder="Ej: 20610550518" maxlength="11">
+  </div>
+
+  <div class="form-row">
+    <label>Tipo y N° de Documento:</label>
+    <div class="tipo-group">
+      <select id="tipo-doc">
+        <option>DNI</option>
+        <option>RUC</option>
+        <option>CE</option>
+        <option>Pasaporte</option>
+      </select>
+      <input type="text" id="num-doc" placeholder="N° de documento del conductor">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Código de Verificación:</label>
+    <div class="verif-group">
+      <input type="text" class="cod-inp" id="cod-verif" maxlength="10" placeholder="— — — —">
+      <div class="info-wrap">
+        <div class="info-btn"><span>i</span></div>
+        <div class="tooltip">El código de verificación figura en la parte superior derecha del acta probatoria o resolución de multa notificada.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep2">
+
+  <div class="captcha-lbl">Ingrese el código de seguridad mostrado en la imagen:</div>
+  <div class="captcha-row">
+    <div class="captcha-box">
+      <div class="noise"></div>
+      <div class="line1"></div>
+      <span class="captcha-text" id="captcha-code">KIGC</span>
+    </div>
+    <input type="text" class="captcha-inp" id="captcha-inp" placeholder="Código" maxlength="6">
+    <button class="btn-consultar" onclick="buscar()">Consultar</button>
+  </div>
+  <div class="gen-row" onclick="generarCaptcha()">
+    <span>Actualizar código</span>
+    <div class="gen-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+    </div>
+  </div>
+  <div class="alert" id="alerta"></div>
+</div>
+
+<!-- RESULTADO -->
+<div id="bloque-resultado">
+  <div class="resultado-titulo">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Resultado de Consulta — Acta Probatoria / Resolución de Multa
+  </div>
+  <div class="resultado-card">
+
+    <div class="banner-estado">
+      <div class="estado-icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="estado-texto">
+        <div class="titulo-estado">Multa cancelada — Sin deuda vigente</div>
+        <div class="sub-estado">El acta probatoria ha sido procesada. La sanción de internamiento fue sustituida por multa y ésta fue <strong>cancelada en su totalidad</strong>. El expediente se encuentra concluido.</div>
+      </div>
+      <div class="badges-col">
+        <span class="badge verde"><span class="badge-dot"></span>CANCELADA</span>
+        <span class="badge gris"><span class="badge-dot"></span>EXPEDIENTE CONCLUIDO</span>
+      </div>
+    </div>
+
+    <!-- S1: DATOS DEL ACTA -->
+    <div class="res-seccion">
+      <div class="res-seccion-lbl">Datos del Acta Probatoria</div>
+      <div class="datos-grid">
+        <div class="dato-item full">
+          <div class="dato-label">N° Acta Probatoria al Transportista — Detección</div>
+          <div class="dato-valor destacado" id="r-acta">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">N° Resolución de Multa</div>
+          <div class="dato-valor" id="r-resolucion">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">N° Expediente</div>
+          <div class="dato-valor" id="r-expediente">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Fecha y Hora de Intervención</div>
+          <div class="dato-valor" id="r-hora">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Fecha de Emisión de Resolución</div>
+          <div class="dato-valor" id="r-fecha">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2: EMPRESA Y CONDUCTOR -->
+    <div class="res-seccion">
+      <div class="res-seccion-lbl">Datos del Transportista y Vehículo Intervenido</div>
+      <div class="datos-grid">
+        <div class="dato-item">
+          <div class="dato-label">RUC</div>
+          <div class="dato-valor" id="r-ruc">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Razón Social / Denominación</div>
+          <div class="dato-valor" id="r-razon">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">N° TUC</div>
+          <div class="dato-valor" id="r-tuc">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Placa(s) y Marca(s)</div>
+          <div class="dato-valor" id="r-placa-res">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Conductor / Intervenido</div>
+          <div class="dato-valor" id="r-conductor">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Tipo y N° de Documento</div>
+          <div class="dato-valor" id="r-dni">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3: LUGAR E INFRACCIÓN -->
+    <div class="res-seccion">
+      <div class="res-seccion-lbl">Lugar de Intervención e Infracción Detectada</div>
+      <div class="datos-grid">
+        <div class="dato-item">
+          <div class="dato-label">Lugar de Intervención</div>
+          <div class="dato-valor" id="r-lugar">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Distrito</div>
+          <div class="dato-valor" id="r-distrito">—</div>
+        </div>
+        <div class="dato-item full">
+          <div class="dato-label">Materia / Infracción Detectada</div>
+          <div class="dato-valor rojo" id="r-infraccion">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Norma Infringida</div>
+          <div class="dato-valor" id="r-norma">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Calificación</div>
+          <div class="dato-valor" id="r-calificacion">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Peso Bruto Vehicular</div>
+          <div class="dato-valor" id="r-peso">—</div>
+        </div>
+        <div class="dato-item">
+          <div class="dato-label">Fedatario Fiscalizador</div>
+          <div class="dato-valor" id="r-fedatario">—</div>
+        </div>
+      </div>
+      <div class="infraccion-box" id="r-descripcion">—</div>
+    </div>
+
+    <!-- MONTO -->
+    <div class="monto-box">
+      <div class="monto-izq">
+        <div class="monto-lbl">Concepto de la Multa</div>
+        <div class="monto-concepto" id="r-concepto">—</div>
+      </div>
+      <div class="monto-der">
+        <div class="monto-val" id="r-monto">—</div>
+        <div class="monto-estado">✔ Cancelada — Sin saldo pendiente</div>
+      </div>
+    </div>
+
+    <div class="nota-legal">
+      <strong>📋 Estado del expediente:</strong> El presente expediente administrativo se encuentra <strong>concluido</strong>. La resolución de multa fue emitida en sustitución de la sanción de internamiento temporal conforme al Art. 182 del TUO del Código Tributario (D.S. N° 133-2013-EF) y el Reglamento de Sanción de Internamiento R.S. N° 158-2004/SUNAT. La multa fue <strong>cancelada en su totalidad</strong> y no se requiere acción adicional.<br>
+      Para consultas comuníquese a <strong>orientacion@sunat.gob.pe</strong> o al <strong>0-801-12-100</strong>, citando el N° de expediente.
+    </div>
+
+    <button class="btn-nueva" onclick="nuevaBusqueda()">&#8592; Nueva consulta</button>
+  </div>
+</div>
+
+<div class="footer-top">
+  Accesibilidad &nbsp;|&nbsp; Mapa del Sitio &nbsp;|&nbsp; Políticas de Privacidad &nbsp;|&nbsp; Aviso Legal &nbsp;|&nbsp; Contacto
+</div>
+<div class="footer-sunat">
+  <strong>SUNAT — Superintendencia Nacional de Aduanas y de Administración Tributaria</strong><br>
+  Av. Garcilaso de la Vega N° 1472, Lima 1, Perú &nbsp;|&nbsp; Central: 0-801-12-100 &nbsp;|&nbsp; Lima: (01) 315-0730<br>
+  <a href="#">www.sunat.gob.pe</a> &nbsp;|&nbsp; <a href="#">Portal SOL</a> &nbsp;|&nbsp; Horario: Lunes a Viernes 8:30 am – 5:30 pm<br>
+  © 2026 SUNAT. Todos los derechos reservados.
+</div>
+
+<script>
+  const REGISTROS = [
+    {
+      actas:  ['0200700142859-04','020070014285904','142859','142859-04','0200700142859'],
+      placas: ['F3W794','TPP986','F3W794FREIGHTLINER','TPP986ARNOLD'],
+      rucs:   ['20610550518'],
+      dnis:   ['45518552','Q45518552'],
+
+      acta:        'N° 0200700142859-04',
+      resolucion:  'R.M. N° 0200700142859-04-SUNAT/1T0000',
+      expediente:  '0200700142859-04-2026',
+      hora:        '30/04/2026 — 09:58 hrs. &nbsp;(Término: 10:14 hrs.)',
+      fecha:       '07 de mayo de 2026',
+
+      ruc:         '20610550518',
+      razon:       'CONSTRUCCION Y TRANSPORTE A & P E.I.R.L.',
+      tuc:         '15M25060501E',
+      conductor:   'LLATAS DELGADO, ALEXANDER',
+      dni:         'DNI — Q45518552',
+      placa:       'F3W794 / FREIGHTLINER &nbsp;&nbsp;·&nbsp;&nbsp; TPP986 / ARNOLD',
+
+      lugar:       'PUCUSANA — ENTRADA — CARRETERA PANAMERICANA SUR KM. 56',
+      distrito:    'CHILCA',
+      infraccion:  'Art. 174° Numeral 4 TUO Código Tributario — Transporte de bienes sin portar Guía de Remisión Transportista electrónica',
+      norma:       'Art. 174° N° 4 — D.S. N° 133-2013-EF y normas modificatorias',
+      calificacion:'GRAVE',
+      peso:        '63.58 Toneladas &nbsp;(Remolcador: 23,587 kg &nbsp;/&nbsp; Carreta: 40,000 kg)',
+      fedatario:   'VILCAPAZA HUAYCANI, MAX FREIRE',
+      descripcion: '<strong>Observaciones:</strong> Al inicio de la intervención el transportista no portó ni exhibió Guía de Remisión Transportista que sustente tributariamente el traslado de bienes. Con posterioridad al inicio, el contribuyente emitió GRE Transportista N° <strong>EG03-00000022</strong>. Se verificó placa del vehículo en los sistemas de SUNARP, identificándose al deudor tributario. <br><br><strong>Remitente:</strong> CARDENAS AGOSTINELLI HECTOR ALFREDO &nbsp;|&nbsp; RUC N° 10439202578 &nbsp;|&nbsp; Serie y correlativo: 001-127 &nbsp;|&nbsp; <strong>Traslada:</strong> CEBOLLA ROJA.',
+
+      concepto:    'Multa Art. 174° N° 4 — Sustitución de internamiento temporal de vehículo (Art. 182 TUO Cód. Tributario)',
+      monto:       'S/ 2,675.00',
+    }
+  ];
+
+  const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+  function generarCaptcha() {
+    let c = '';
+    for (let i = 0; i < 4; i++) c += CHARS[Math.floor(Math.random() * CHARS.length)];
+    document.getElementById('captcha-code').textContent = c;
+    document.getElementById('captcha-inp').value = '';
+    ocultarAlerta();
+  }
+
+  function mostrarAlerta(msg) {
+    const a = document.getElementById('alerta');
+    a.textContent = msg; a.className = 'alert error'; a.style.display = 'block';
+  }
+  function ocultarAlerta() { document.getElementById('alerta').style.display = 'none'; }
+  function normalizar(s) { return s.trim().toUpperCase().replace(/[\s\-\/\.]/g, ''); }
+
+  function buscar() {
+    const captchaVal  = document.getElementById('captcha-inp').value.trim().toUpperCase();
+    const captchaReal = document.getElementById('captcha-code').textContent.trim();
+    const modo = document.querySelector('input[name="buscar"]:checked').value;
+
+    if (!captchaVal) { mostrarAlerta('⚠ Ingrese el código de seguridad.'); return; }
+    if (captchaVal !== captchaReal) {
+      mostrarAlerta('✗ Código de seguridad incorrecto. Se ha generado un nuevo código.');
+      generarCaptcha(); return;
+    }
+
+    const doc   = normalizar(document.getElementById('num-doc').value);
+    const placa = normalizar(document.getElementById('num-placa').value);
+    const acta  = normalizar(document.getElementById('num-acta').value);
+    const rucEl = document.getElementById('num-ruc');
+    const ruc   = rucEl ? normalizar(rucEl.value) : '';
+
+    if (modo !== 'ruc' && !doc) { mostrarAlerta('⚠ Ingrese el número de documento del conductor.'); return; }
+    if (modo === 'acta'  && !acta)  { mostrarAlerta('⚠ Ingrese el N° de Acta Probatoria.'); return; }
+    if (modo === 'placa' && !placa) { mostrarAlerta('⚠ Ingrese la placa del vehículo.'); return; }
+    if (modo === 'ruc'   && !ruc)   { mostrarAlerta('⚠ Ingrese el RUC de la empresa.'); return; }
+
+    let encontrado = null;
+    for (const p of REGISTROS) {
+      const matchDoc   = p.dnis.map(normalizar).some(x => x === doc || x.includes(doc));
+      const matchPlaca = p.placas.map(normalizar).some(x => x === placa || x.includes(placa) || placa.includes(x));
+      const matchActa  = p.actas.map(normalizar).some(x => x === acta || x.includes(acta) || acta.includes(x));
+      const matchRuc   = p.rucs.map(normalizar).some(x => x === ruc);
+
+      if (modo === 'acta'  && matchActa  && matchDoc) { encontrado = p; break; }
+      if (modo === 'placa' && matchPlaca && matchDoc) { encontrado = p; break; }
+      if (modo === 'ruc'   && matchRuc)               { encontrado = p; break; }
+    }
+
+    if (!encontrado) {
+      mostrarAlerta('✗ No se encontraron registros con los datos ingresados. Verifique la información e intente nuevamente.');
+      generarCaptcha(); return;
+    }
+
+    mostrarResultado(encontrado);
+  }
+
+  function mostrarResultado(p) {
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = val;
+    };
+    set('r-acta',       p.acta);
+    set('r-resolucion', p.resolucion);
+    set('r-expediente', p.expediente);
+    set('r-hora',       p.hora);
+    set('r-fecha',      p.fecha);
+    set('r-ruc',        p.ruc);
+    set('r-razon',      p.razon);
+    set('r-tuc',        p.tuc);
+    set('r-conductor',  p.conductor);
+    set('r-dni',        p.dni);
+    set('r-placa-res',  p.placa);
+    set('r-lugar',      p.lugar);
+    set('r-distrito',   p.distrito);
+    set('r-infraccion', p.infraccion);
+    set('r-norma',      p.norma);
+    set('r-calificacion', p.calificacion);
+    set('r-peso',       p.peso);
+    set('r-fedatario',  p.fedatario);
+    set('r-descripcion',p.descripcion);
+    set('r-concepto',   p.concepto);
+    set('r-monto',      p.monto);
+
+    document.getElementById('card-form').style.display        = 'none';
+    document.getElementById('titulo-main').style.display      = 'none';
+    document.getElementById('bloque-resultado').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function nuevaBusqueda() {
+    document.getElementById('card-form').style.display        = 'block';
+    document.getElementById('titulo-main').style.display      = 'flex';
+    document.getElementById('bloque-resultado').style.display = 'none';
+    ['num-doc','num-acta','num-placa','num-ruc','cod-verif','captcha-inp'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    ocultarAlerta();
+    generarCaptcha();
+  }
+
+  document.querySelectorAll('input[name="buscar"]').forEach(r => {
+    r.addEventListener('change', function () {
+      document.getElementById('row-acta').style.display  = this.value === 'acta'  ? 'flex' : 'none';
+      document.getElementById('row-placa').style.display = this.value === 'placa' ? 'flex' : 'none';
+      document.getElementById('row-ruc').style.display   = this.value === 'ruc'   ? 'flex' : 'none';
+      ocultarAlerta();
+    });
+  });
+
+  generarCaptcha();
+</script>
+</body>
+</html>
